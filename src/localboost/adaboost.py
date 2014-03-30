@@ -6,6 +6,7 @@ from math import log, exp
 class AdaBoostEnsemble(object):
 	"""An implementation of discreet AdaBoost algorithm for binary classification."""
 	def __init__(self, X, y, base_classifier=DecisionTreeClassifier, classifier_opt_args = {'max_depth': 2}):
+		self.classifiers = []
 		self.base_classifier = base_classifier
 		self.X = X
 		self.y = y
