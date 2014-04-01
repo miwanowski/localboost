@@ -9,3 +9,6 @@
 
 # Python compiled files
 *.pyc
+
+# DS_Store files
+.DS_Store

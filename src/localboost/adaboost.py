@@ -5,24 +5,27 @@ from math import log, exp
 
 class AdaBoostEnsemble(object):
 	"""An implementation of discreet AdaBoost algorithm for binary classification."""
-	def __init__(self, X, y, base_classifier=DecisionTreeClassifier, classifier_opt_args = {'max_depth': 2}):
+	def __init__(self, X, y, base_classifier=DecisionTreeClassifier, **kwargs):
 		self.classifiers = []
 		self.base_classifier = base_classifier
 		self.X = X
 		self.y = y
-		self.classifier_opt_args = classifier_opt_args
+		self.n_iters = 0
+		self.classifier_opt_args = kwargs
 		n_examples = y.shape[0]
 		n_plus = sum(y == 1)
 		ratio = n_plus/(n_examples-n_plus)
 		self.training_weights = np.ones(y.shape[0])
 		self.training_weights[y == -1] = ratio
 		self.training_weights /= sum(self.training_weights)
+		self.classifier_weights = np.ndarray((0,))
 
 	def fit(self, n_iters):
 		"""Iteratively add a given number of classifiers to the ensemble."""
 		for i in xrange(n_iters):
 			# create a new base model:
-			base_model = self.base_classifier(**self.classifier_opt_args)
+			default_base_args = {'max_depth': 1}
+			base_model = self.base_classifier(**(dict(default_base_args.items() + self.classifier_opt_args.items())))
 			base_model.fit(X=self.X, y=self.y, sample_weight=self.training_weights)
 
 			# evaluate the new model's accuracy:
@@ -52,8 +55,3 @@ class AdaBoostEnsemble(object):
 			p = self.classifiers[i].predict(test_data)
 			prediction += p * self.classifier_weights[i]
 		return np.sign(prediction)
-
-	n_iters 				= 0
-	classifiers 			= []
-	training_weights 		= np.ndarray((0,))
-	classifier_weights 		= np.ndarray((0,))
