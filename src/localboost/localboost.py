@@ -6,14 +6,15 @@ from math import log, exp
 
 class LocalAdaBoostEnsemble(object):
 	"""An implementation of discreet AdaBoost algorithm for binary classification and locally measured accuracy."""
-	def __init__(self, X, y, base_classifier=DecisionTreeClassifier, **kwargs):
+	def __init__(self, X, y, base_classifier_args, ensemble_args, base_classifier=DecisionTreeClassifier):
 		self.classifiers = []
 		self.accuracy_models = []
 		self.base_classifier = base_classifier
 		self.X = X
 		self.y = y
 		self.n_iters = 0
-		self.classifier_opt_args = kwargs
+		self.base_classifier_args = base_classifier_args
+		self.ensemble_args = ensemble_args
 		n_examples = y.shape[0]
 		n_plus = sum(y == 1)
 		ratio = n_plus/(n_examples-n_plus)
@@ -27,7 +28,7 @@ class LocalAdaBoostEnsemble(object):
 		for i in xrange(n_iters):
 			# create a new base model:
 			default_base_args = {'max_depth': 1}
-			base_model = self.base_classifier(**(dict(default_base_args.items() + self.classifier_opt_args.items())))
+			base_model = self.base_classifier(**(dict(default_base_args.items() + self.base_classifier_args.items())))
 			base_model.fit(X=self.X, y=self.y, sample_weight=self.training_weights)
 
 			# evaluate the new model's accuracy:
@@ -61,6 +62,8 @@ class LocalAdaBoostEnsemble(object):
 	def predict(self, test_data, gamma=0.15):
 		"""Use the model to predict class labels on a test data set."""
 		prediction = np.zeros(test_data.shape[0])
+		if 'gamma' in self.ensemble_args.keys():
+			gamma = self.ensemble_args['gamma']
 		for i in xrange(self.n_iters):
 			p = self.classifiers[i].predict(test_data)
 			local_accuracy = self.accuracy_models[i].predict_proba(test_data)[:,1]

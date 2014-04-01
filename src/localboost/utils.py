@@ -12,9 +12,10 @@ def trainTestSplit(dataset, train_ratio=0.6):
     test_mask = ~train_mask
     return dataset[train_mask], dataset[test_mask]
 
-def benchmarkBoostedClassifier(classifier, trainX, trainY, testX, testY, iteration_vector, **kwargs):
+def benchmarkBoostedClassifier(classifier, trainX, trainY, testX, testY, iteration_vector,
+                                 base_classifier_args = {}, ensemble_args={}):
     """Measure the error of a given boosted classifier as a function of the number of iterations."""
-    boosted_classifier = classifier(trainX, trainY, **kwargs)
+    boosted_classifier = classifier(trainX, trainY, base_classifier_args, ensemble_args)
     # a vector that stores differences between adjacent elements of iteration_vector; it is used to determine
     # the number of classifiers that need to be added in each loop in order to maintain the total number of
     # classifiers as given in the iteration_vector: 
