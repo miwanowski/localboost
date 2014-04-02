@@ -36,6 +36,8 @@ class LocalAdaBoostEnsemble(object):
 			correctly_classified = base_prediction == self.y
 			incorrectly_classified = ~correctly_classified
 			base_error_rate = sum(self.training_weights[incorrectly_classified])
+			if base_error_rate == 0:
+				base_error_rate = 0.001
 			alpha = 0.5*log((1.0-base_error_rate)/(base_error_rate))
 
 			# build a logistic regression model for the base model's accuracy in training space
