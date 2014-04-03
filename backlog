@@ -1,0 +1,6 @@
+TODO:
+	[ ] test and compare favoring good classifiers vs penalizing bad classifiers vs both for localboost
+	[ ] implement clusterboost
+	[ ] refactor localboost to dynamically change accuracy model type
+	[ ] add extra automation for batch testing
+	[ ] research parallel boosting methods
