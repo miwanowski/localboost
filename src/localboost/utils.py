@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from math import ceil
 
@@ -68,3 +69,64 @@ def crossValidatedBenchmark(classifier, datasetX, datasetY, k, iteration_vector,
     final_train_errors /= k
     final_test_errors /= k
     return final_train_errors, final_test_errors
+
+def visualizeBenchmarkComparison(iterations, ref_train_errors, ref_test_erors, train_errors, test_errors, \
+                                 title1, title2, main_title):
+    """Plot the train and test errors of two compared classifiers against the number of iterations."""
+    fig = plt.figure(figsize=(12,6))
+    fig.suptitle(main_title)
+    p1 = plt.subplot(121)
+    p1.set_title(title1)
+    p1.set_xlabel('iterations')
+    ref_train_plot, = p1.plot(iterations, ref_train_errors)
+    ref_test_plot, = p1.plot(iterations, ref_test_erors)
+    p1.legend([ref_train_plot, ref_test_plot], ['train error', 'test error'])
+    p2 = plt.subplot(122)
+    p2.set_title(title2)
+    p2.set_xlabel('iterations')
+    p2.set_ylim(p1.get_ylim())
+    train_plot, = p2.plot(iterations, train_errors)
+    test_plot, = p2.plot(iterations, test_errors)
+    p2.legend([train_plot, test_plot], ['train error', 'test error'])
+
+# -------------------------------- batch benchmarking utils: --------------------------------
+
+class BenchmarkScenario(object):
+    """Class that defines a single comparison of regular AdaBoost with a given variant."""
+    def __init__(self, ref_classifier, classifier, dataset, dataset_name, k, iteration_vector, ensemble_args):
+        self.ref_classifier = ref_classifier
+        self.classifier = classifier
+        self.dataset = dataset
+        self.dataset_name = dataset_name
+        self.k = k
+        self.iteration_vector = iteration_vector
+        self.ensemble_args = ensemble_args
+
+    def run(self):
+        datasetX = self.dataset[:,0:(self.dataset.shape[1]-1)]
+        datasetY = self.dataset[:,self.dataset.shape[1]-1]
+        ref_train_errors, ref_test_errors = crossValidatedBenchmark(self.ref_classifier,
+                                                                   datasetX,
+                                                                   datasetY,
+                                                                   self.k,
+                                                                   self.iteration_vector)
+
+        train_errors, test_errors = crossValidatedBenchmark(self.classifier,
+                                                            datasetX, 
+                                                            datasetY, 
+                                                            self.k, 
+                                                            self.iteration_vector, 
+                                                            ensemble_args=self.ensemble_args)
+        self.last_train_errors, self.last_test_errors = train_errors, test_errors
+        self.last_ref_train_errors, self.last_ref_test_errors = ref_train_errors, ref_test_errors
+        title1 = self.ref_classifier.__name__
+        title2 = self.classifier.__name__ + str(self.ensemble_args).replace(', ', ',\n')
+        main_title = self.dataset_name
+        visualizeBenchmarkComparison(self.iteration_vector,
+                                     ref_train_errors, 
+                                     ref_test_errors, 
+                                     train_errors, 
+                                     test_errors, 
+                                     title1, 
+                                     title2,
+                                     main_title)
