@@ -2,7 +2,13 @@ import numpy as np
 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
 from math import log, exp
+
+class ClassifierParamsException(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
 
 class LocalAdaBoostEnsemble(object):
 	"""An implementation of discreet AdaBoost algorithm for binary classification and locally measured accuracy."""
@@ -22,6 +28,10 @@ class LocalAdaBoostEnsemble(object):
 		self.training_weights[y == -1] = ratio
 		self.training_weights /= sum(self.training_weights)
 		self.classifier_weights = np.ndarray((0,))
+		self.accuracy_model_type = 'logreg'
+		self.accuracy_model_usage = 'tanh'
+		self.gamma = 0.2
+		self.__dict__.update(ensemble_args)
 
 	def fit(self, n_iters):
 		"""Iteratively add a given number of classifiers to the ensemble."""
@@ -44,10 +54,18 @@ class LocalAdaBoostEnsemble(object):
 			accuracy_Y = np.ndarray(correctly_classified.shape, dtype=float)
 			accuracy_Y[np.where(correctly_classified == True)] = 1
 			accuracy_Y[np.where(correctly_classified != True)] = -1
-			lr_model = LogisticRegression()
-			lr_model.fit(self.X, accuracy_Y)
-			#print(float(sum(lr_model.predict(self.X) != accuracy_Y))/self.X.shape[0])
-			self.accuracy_models.append(lr_model)
+			if self.accuracy_model_type == 'logreg':
+				accuracy_model = LogisticRegression()
+			elif self.accuracy_model_type == 'gaussianNB':
+				accuracy_model = GaussianNB()
+			elif self.accuracy_model_type == 'svmrf':
+				accuracy_model = SVC(probability=True)
+			else:
+				raise ClassifierParamsException('Unknown accuracy model type: ' + str(self.accuracy_model_type))
+
+			accuracy_model.fit(self.X, accuracy_Y)
+			#print(float(sum(accuracy_model.predict(self.X) != accuracy_Y))/self.X.shape[0])
+			self.accuracy_models.append(accuracy_model)
 
 			# add new model to the ensemble:
 			self.classifiers.append(base_model)
@@ -62,13 +80,16 @@ class LocalAdaBoostEnsemble(object):
 
 		self.n_iters += n_iters
 
-	def predict(self, test_data, gamma=0.15):
+	def predict(self, test_data):
 		"""Use the model to predict class labels on a test data set."""
 		prediction = np.zeros(test_data.shape[0])
-		if 'gamma' in self.ensemble_args.keys():
-			gamma = self.ensemble_args['gamma']
 		for i in xrange(self.n_iters):
 			p = self.classifiers[i].predict(test_data)
 			local_accuracy = self.accuracy_models[i].predict_proba(test_data)[:,1]
-			prediction += p * self.classifier_weights[i] * (2*gamma*local_accuracy + 1.0 - gamma)
+			if self.accuracy_model_usage == 'linear':
+				prediction += p * self.classifier_weights[i] * (2*self.gamma*local_accuracy + 1.0 - self.gamma)
+			elif self.accuracy_model_usage == 'tanh':
+				prediction += p * self.classifier_weights[i] * np.maximum(1, self.gamma*np.tanh(local_accuracy-0.5)+1)
+			else:
+				raise ClassifierParamsException('Unknown accuracy model usage: ' + str(self.accuracy_model_usage))
 		return np.sign(prediction)

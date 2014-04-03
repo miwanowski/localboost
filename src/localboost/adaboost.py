@@ -20,6 +20,7 @@ class AdaBoostEnsemble(object):
 		self.training_weights[y == -1] = ratio
 		self.training_weights /= sum(self.training_weights)
 		self.classifier_weights = np.ndarray((0,))
+		self.__dict__.update(ensemble_args)
 
 	def fit(self, n_iters):
 		"""Iteratively add a given number of classifiers to the ensemble."""
