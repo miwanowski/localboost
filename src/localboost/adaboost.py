@@ -5,7 +5,7 @@ from math import log, exp
 
 class AdaBoostEnsemble(object):
 	"""An implementation of discreet AdaBoost algorithm for binary classification."""
-	def __init__(self, X, y, base_classifier_args, ensemble_args, base_classifier=DecisionTreeClassifier):
+	def __init__(self, X, y, base_classifier_args={}, ensemble_args={}, base_classifier=DecisionTreeClassifier):
 		self.classifiers = []
 		self.base_classifier = base_classifier
 		self.X = X
@@ -15,7 +15,7 @@ class AdaBoostEnsemble(object):
 		self.ensemble_args = ensemble_args
 		n_examples = y.shape[0]
 		n_plus = sum(y == 1)
-		ratio = n_plus/(n_examples-n_plus)
+		ratio = float(n_plus)/(n_examples-n_plus)
 		self.training_weights = np.ones(y.shape[0])
 		self.training_weights[y == -1] = ratio
 		self.training_weights /= sum(self.training_weights)

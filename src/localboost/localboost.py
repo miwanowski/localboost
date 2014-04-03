@@ -6,7 +6,7 @@ from math import log, exp
 
 class LocalAdaBoostEnsemble(object):
 	"""An implementation of discreet AdaBoost algorithm for binary classification and locally measured accuracy."""
-	def __init__(self, X, y, base_classifier_args, ensemble_args, base_classifier=DecisionTreeClassifier):
+	def __init__(self, X, y, base_classifier_args={}, ensemble_args={}, base_classifier=DecisionTreeClassifier):
 		self.classifiers = []
 		self.accuracy_models = []
 		self.base_classifier = base_classifier
@@ -17,7 +17,7 @@ class LocalAdaBoostEnsemble(object):
 		self.ensemble_args = ensemble_args
 		n_examples = y.shape[0]
 		n_plus = sum(y == 1)
-		ratio = n_plus/(n_examples-n_plus)
+		ratio = float(n_plus)/(n_examples-n_plus)
 		self.training_weights = np.ones(y.shape[0])
 		self.training_weights[y == -1] = ratio
 		self.training_weights /= sum(self.training_weights)
@@ -46,6 +46,7 @@ class LocalAdaBoostEnsemble(object):
 			accuracy_Y[np.where(correctly_classified != True)] = -1
 			lr_model = LogisticRegression()
 			lr_model.fit(self.X, accuracy_Y)
+			#print(float(sum(lr_model.predict(self.X) != accuracy_Y))/self.X.shape[0])
 			self.accuracy_models.append(lr_model)
 
 			# add new model to the ensemble:

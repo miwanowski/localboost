@@ -46,6 +46,7 @@ def crossValidatedBenchmark(classifier, datasetX, datasetY, k, iteration_vector,
     final_train_errors.fill(0)
     final_test_errors.fill(0)
     for i in xrange(k):
+        print('Starting #' + str(i+1) + ' cross-validation fold..')
         if i == k-1:
             test_indices = range(i*fold_size, n_total)
         else:
